@@ -55,6 +55,9 @@ for date, rows in by_date.items():
     base_high = base_candle['High']
     base_low = base_candle['Low']
     base_close = base_candle['Close']
+    
+    if (base_high - base_low) < 4:
+        continue
 
     # Get 13:45 candle for SL
     sl_candle = next((r for r in rows if r['Time'].time() == datetime.strptime("13:15:00", "%H:%M:%S").time()), None)
