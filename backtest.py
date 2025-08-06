@@ -2,8 +2,12 @@ import csv
 from datetime import datetime, timedelta
 from tabulate import tabulate
 from collections import defaultdict
-    
-csv_file = 'xau_usd_m15.csv'
+
+import openpyxl
+from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
+
+csv_file = "xau_usd_m15.csv"
 
 def parse_time(timestr):
     return datetime.strptime(timestr.strip(), '%Y-%m-%d %H:%M:%S')
@@ -114,12 +118,43 @@ for date, rows in by_date.items():
         "Trade Result": "Bad" if sl_hit and max_points < 5 else "Good"
     }
 
-    results.append(result)
-    
-    
+    results.append(result) 
 
 # Display table
 if results:
     print(tabulate(results, headers="keys", tablefmt="pretty"))
 else:
     print("No valid breakout trades found.")
+
+
+wb = openpyxl.Workbook()
+ws = wb.active
+ws.title = "Gold Strategy Backtest"
+
+headers = list(results[0].keys())
+ws.append(headers)
+
+for result in results:
+    ws.append(list(result.values()))
+
+for col_num, column_title in enumerate(headers, 1):
+    column_letter = get_column_letter(col_num)
+    ws.column_dimensions[column_letter].width = max(len(str(column_title)) + 2, 15)
+
+for cell in ws[1]:
+    cell.font = Font(bold=True)
+
+total_trades = len(results)
+good_trades = sum(1 for r in results if r["Trade Result"] == "Good")
+efficiency = round((good_trades / total_trades) * 100, 2) if total_trades else 0.0
+
+ws.append([])
+ws.append(["Efficiency Summary"])
+ws.append(["Total Trades", total_trades])
+ws.append(["Good Trades", good_trades])
+ws.append(["Efficiency (%)", efficiency])
+
+output_file = "gold_strategy_backtest.xlsx"
+wb.save(output_file)
+
+print(f"\nExcel file saved as: {output_file}")   
