@@ -85,6 +85,8 @@ for date, rows in by_date.items():
     entry_price = breakout_candle['Close']
     sl_price = sl_candle['Low'] if bias == 'Buy' else sl_candle['High']
     breakout_time = breakout_candle['Time']
+    
+    sl_points = abs(entry_price - sl_price)
 
     # Track performance
     sl_hit = False
@@ -116,6 +118,7 @@ for date, rows in by_date.items():
         "Breakout Close (Entry)": entry_price,
         "Bias": bias,
         "SL": sl_price,
+        "SL Points": sl_points,
         "Max Points": round(max_points, 2),
         "SL Hit": "Yes" if sl_hit else "No",
         "Trade Result": "Bad" if sl_hit and max_points < 5 else "Good"
@@ -151,8 +154,11 @@ total_trades = len(results)
 good_trades = sum(1 for r in results if r["Trade Result"] == "Good")
 efficiency = round((good_trades / total_trades) * 100, 2) if total_trades else 0.0
 
+avg_sl_points = round(sum(r["SL Points"] for r in results) / len(results), 2) if results else 0.0
+
 ws.append([])
 ws.append(["Efficiency Summary"])
+ws.append(["Average SL Points", avg_sl_points])
 ws.append(["Total Trades", total_trades])
 ws.append(["Good Trades", good_trades])
 ws.append(["Efficiency (%)", efficiency])
